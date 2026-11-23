@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Il Segreto dell'Isola di Espo-Nentia</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Espo-Nentia">
+</head>
+<body>
+
+<div id="app">
+  <!-- SCHERMATA INIZIALE -->
+  <div id="title-screen">
+    <svg id="title-svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+    <button class="title-audio audio-toggle" onclick="toggleAudio()" aria-label="Audio">🔊</button>
+
+    <div class="title-top">
+      <div class="logo-small">IL SEGRETO DELL'ISOLA DI</div>
+      <div class="logo-big">ESPO-NENTIA<span class="logo-n">n</span></div>
+      <div><span class="logo-tag">⚔️ Un'avventura a colpi di potenze</span></div>
+    </div>
+
+    <div class="title-bottom">
+      <p class="game-sub">
+        Qualcuno ha sabotato il Faro rubando i <b>5 Cristalli Esponenziali</b>!
+        Esplora l'isola con <b>Aria</b>, impara le regole e sconfiggi i Guardiani.
+      </p>
+      <button class="start-btn" id="btn-start" onclick="startGame()">⛵ SALPA VERSO L'ISOLA</button>
+      <div class="save-info" id="save-info"></div>
+      <button class="profile-chip" id="profile-chip" onclick="openPlayers()">👤 Giocatrice</button>
+      <button class="install-btn" id="btn-install" onclick="installApp()" style="display:none;">📲 Installa il gioco (funziona anche offline)</button>
+      <button class="reset-link" id="btn-reset-save" onclick="confirmReset()" style="display:none;">Ricomincia da zero</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-badge">✨ Aura: <span class="aura-val" id="hud-aura">100</span></div>
+    <div class="hud-badge">💎 Cristalli: <span class="crystal-val" id="hud-crystals">0/5</span></div>
+    <button id="btn-reading" class="audio-toggle" onclick="openReading()" title="Opzioni di lettura" aria-label="Opzioni di lettura">Aa</button>
+    <button id="btn-audio" class="audio-toggle" onclick="toggleAudio()" title="Audio" aria-label="Audio">🔊</button>
+  </div>
+
+  <!-- SCENA GRAFICA -->
+  <div id="scene-container">
+    <svg id="scene-svg" viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice"></svg>
+    <div id="location-banner">1. Il Molo delle Basi Uguali</div>
+    <div id="duel-panel">
+      <div class="duel-row">
+        <span class="who" id="duel-foe">Guardiano</span>
+        <div class="hpbar"><div id="duel-hp-fill"></div></div>
+      </div>
+      <div class="duel-row">
+        <span class="who">🧭 Aria</span>
+        <span id="duel-hearts">❤️❤️❤️</span>
+        <span id="duel-combo"></span>
+      </div>
+    </div>
+    <div id="action-bubble"></div>
+
+    <!-- CALCOLATRICE: copre solo la scena, l'esercizio resta visibile -->
+    <div id="calc-panel" aria-hidden="true" role="dialog" aria-label="Calcolatrice">
+      <div class="calc-screen">
+        <button type="button" class="calc-close" onclick="calcToggle(false)" aria-label="Chiudi la calcolatrice">✕</button>
+        <div class="calc-last" id="calc-last"></div>
+        <div class="calc-display" id="calc-display" aria-live="polite">0</div>
+      </div>
+      <div class="calc-keys" id="calc-keys"></div>
+    </div>
+  </div>
+
+  <!-- AREA DIALOGHI E SFIDE -->
+  <div id="dialogue-area">
+    <div class="speaker-header">
+      <div class="avatar-box" id="speaker-avatar">🧭</div>
+      <div>
+        <div class="speaker-name" id="speaker-name">Aria</div>
+        <div class="speaker-role" id="speaker-role">Esploratrice dell'Accademia</div>
+      </div>
+      <button type="button" id="btn-listen" onclick="toggleListen()" aria-pressed="false">🔈 Ascolta</button>
+    </div>
+
+    <div class="dialogue-box" id="dialogue-text">
+      Tocca un personaggio nella scena qui sopra per iniziare!
+    </div>
+
+    <div id="feedback-slot"></div>
+
+    <div class="choices-list" id="choices-container"></div>
+  </div>
+
+  <!-- BARRA INFERIORE -->
+  <div id="bottom-nav">
+    <button class="nav-btn" data-nav="notebook" onclick="openModal('notebook')">
+      <span class="badge-dot" id="notebook-dot"></span>
+      <span class="icon">📖</span>
+      <span>Taccuino</span>
+    </button>
+    <button class="nav-btn" data-nav="map" onclick="openModal('map')">
+      <span class="icon">🗺️</span>
+      <span>Mappa</span>
+    </button>
+    <button class="nav-btn" data-nav="calc" onclick="calcToggle()" aria-label="Calcolatrice">
+      <span class="icon">🧮</span>
+      <span>Calcola</span>
+    </button>
+    <button class="nav-btn" data-nav="inventory" onclick="openModal('inventory')">
+      <span class="icon">🎒</span>
+      <span>Zaino (<span id="inv-count">0</span>)</span>
+    </button>
+    <button class="nav-btn" data-nav="profile" onclick="openModal('profile')">
+      <span class="icon">👤</span>
+      <span>Profilo</span>
+    </button>
+  </div>
+
+  <!-- MODALE TACCUINO -->
+  <div class="modal-overlay" id="modal-notebook">
+    <div class="modal-card notebook-theme">
+      <div class="modal-header">
+        <span>📖 Taccuino delle Regole</span>
+        <button class="close-modal" onclick="closeModal('notebook')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="notebook-content"></div>
+    </div>
+  </div>
+
+  <!-- MODALE MAPPA -->
+  <div class="modal-overlay" id="modal-map">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🗺️ Mappa dell'Isola</span>
+        <button class="close-modal" onclick="closeModal('map')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="map-content"></div>
+    </div>
+  </div>
+
+  <!-- MODALE ZAINO -->
+  <div class="modal-overlay" id="modal-inventory">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🎒 Zaino & Cristalli</span>
+        <button class="close-modal" onclick="closeModal('inventory')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="inventory-content"></div>
+    </div>
+  </div>
+
+  <!-- MODALE PROFILO: NEGOZIO E MEDAGLIE -->
+  <div class="modal-overlay" id="modal-profile">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>👤 Profilo</span>
+        <button class="close-modal" onclick="closeModal('profile')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="profile-content"></div>
+    </div>
+  </div>
+
+  <!-- MODALE NEGOZIO DI ZIA TURBINA -->
+  <div class="modal-overlay" id="modal-shop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>🌀 Bancarella di Zia Turbina</span>
+        <button class="close-modal" onclick="closeModal('shop')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="shop-content"></div>
+    </div>
+  </div>
+
+  <!-- MODALE GIOCATRICI (dalla schermata iniziale) -->
+  <div class="modal-overlay players" id="modal-players">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span>👥 Chi gioca?</span>
+        <button class="close-modal" onclick="closeModal('players')" aria-label="Chiudi">✕</button>
+      </div>
+      <div class="modal-body" id="players-content"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICHE -->
+  <div id="toast"></div>
+
+  <!-- TRANSIZIONE TRA AREE -->
+  <div id="fade"></div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/generator.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/reading.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/world.js"></script>
+<script src="js/rooms.js"></script>
+<script src="js/rooms2.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

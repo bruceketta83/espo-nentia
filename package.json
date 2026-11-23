@@ -1,0 +1,12 @@
+{
+  "name": "espo-nentia",
+  "private": true,
+  "description": "Test automatici del gioco Il Segreto dell'Isola di Espo-Nentia",
+  "scripts": {
+    "test": "playwright test",
+    "serve": "python3 -m http.server 4173"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
